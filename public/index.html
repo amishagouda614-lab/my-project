@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Video Upload - Video Summarization</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Video Summarization</h1>
+
+        <h2>Upload Video</h2>
+
+        <p>Select a video file to upload.</p>
+
+        <form id="uploadForm">
+
+            <label for="videoFile">
+                Select Video
+            </label>
+
+            <br><br>
+
+            <input
+                type="file"
+                id="videoFile"
+                name="video"
+                accept=".mp4,.mkv,.mov"
+            >
+
+            <p class="info">
+                Supported formats: MP4, MKV, MOV
+                <br>
+                Maximum file size: 500 MB
+            </p>
+
+            <button type="submit">
+                Upload Video
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
