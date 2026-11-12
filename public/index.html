@@ -3,55 +3,185 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Video Upload - Video Summarization</title>
+    <title>AI Video Summarizer</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <div class="container">
+    <nav class="navbar">
 
-        <h1>Video Summarization</h1>
+        <div class="logo">
+            <div class="logo-icon">▶</div>
+            VideoSummarizer
+        </div>
 
-        <h2>Upload Video</h2>
+        <div class="nav-link">
+            AI-powered video summaries
+        </div>
 
-        <p>Select a video file to upload.</p>
+    </nav>
 
-        <form id="uploadForm">
 
-            <label for="videoFile">
-                Select Video
-            </label>
+    <main class="main">
 
-            <br><br>
+        <div class="badge">
+            ✨ AI-Powered Video Summarization
+        </div>
 
-            <input
-                type="file"
-                id="videoFile"
-                name="video"
-                accept=".mp4,.mkv,.mov"
-            >
+        <h1>
+            Turn long videos into
+            <span class="gradient-text">smart summaries.</span>
+        </h1>
 
-            <p class="info">
-                Supported formats: MP4, MKV, MOV
-                <br>
-                Maximum file size: 500 MB
-            </p>
+        <p class="subtitle">
+            Upload your video and let AI extract the important
+            points, topics and insights in seconds.
+        </p>
 
-            <button type="submit">
-                Upload Video
-            </button>
 
-        </form>
+        <div class="upload-card">
 
-        <div id="message"></div>
+            <form id="uploadForm">
 
-    </div>
+                <div class="drop-zone" id="dropZone">
+
+                    <div class="upload-icon">
+                        🎬
+                    </div>
+
+                    <h2>
+                        Drop your video here
+                    </h2>
+
+                    <p>
+                        or choose a video from your computer
+                    </p>
+
+                    <label for="videoFile" class="file-label">
+                        Browse Video
+                    </label>
+
+                    <input
+                        type="file"
+                        id="videoFile"
+                        name="video"
+                        accept=".mp4,.mkv,.mov"
+                    >
+
+                    <div class="selected-file" id="selectedFile">
+
+                        <div class="file-symbol">
+                            🎥
+                        </div>
+
+                        <div class="file-name" id="fileName">
+                            Video.mp4
+                        </div>
+
+                        <div class="file-size" id="fileSize">
+                            0 MB
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="language-selector">
+    <label for="summaryLanguage">Summary Language</label>
+
+    <select id="summaryLanguage">
+        <option value="English">English</option>
+        <option value="Hindi">हिंदी</option>
+        <option value="Telugu">తెలుగు</option>
+        <option value="Tamil">தமிழ்</option>
+        <option value="Kannada">ಕನ್ನಡ</option>
+        <option value="Malayalam">മലയാളം</option>
+        <option value="Marathi">मराठी</option>
+        <option value="Bengali">বাংলা</option>
+        <option value="Gujarati">ગુજરાતી</option>
+        <option value="Punjabi">ਪੰਜਾਬੀ</option>
+        <option value="Urdu">اردو</option>
+    </select>
+</div>
+<button type="submit" id="generateButton" class="generate-button">
+    ✨ Generate Summary
+</button>
+            </form>
+
+
+            <div class="info">
+                MP4 • MKV • MOV &nbsp; | &nbsp; Maximum file size: 500 MB
+            </div>
+
+            <div id="message"></div>
+
+        </div>
+
+
+        <section class="features">
+
+            <div class="feature">
+
+                <div class="feature-icon">
+                    ⚡
+                </div>
+
+                <h3>
+                    Fast Processing
+                </h3>
+
+                <p>
+                    Get useful video insights without watching
+                    the entire video.
+                </p>
+
+            </div>
+
+
+            <div class="feature">
+
+                <div class="feature-icon">
+                    🧠
+                </div>
+
+                <h3>
+                    AI-Powered
+                </h3>
+
+                <p>
+                    AI identifies the important topics and
+                    information from your video.
+                </p>
+
+            </div>
+
+
+            <div class="feature">
+
+                <div class="feature-icon">
+                    📋
+                </div>
+
+                <h3>
+                    Clear Summary
+                </h3>
+
+                <p>
+                    Get concise and easy-to-understand
+                    summaries of your videos.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
 
     <script src="script.js"></script>
 

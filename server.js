@@ -3,6 +3,8 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const axios = require("axios");
+const FormData = require("form-data");
 
 const app = express();
 
@@ -46,28 +48,14 @@ const storage = multer.diskStorage({
 // FILE VALIDATION
 // ==========================================
 
-const allowedExtensions = [".mp4", ".mkv", ".mov"];
-
 const fileFilter = function (req, file, cb) {
 
-    console.log("=================================");
-    console.log("FILE NAME:", file.originalname);
-    console.log("MIME TYPE:", file.mimetype);
+    const allowedExtensions = [".mp4", ".mkv", ".mov"];
 
-    const extension = path.extname(file.originalname).toLowerCase();
+    const extension =
+        path.extname(file.originalname).toLowerCase();
 
-    console.log("EXTENSION:", extension);
-    console.log("=================================");
-
-    if (extension === ".mp4") {
-        return cb(null, true);
-    }
-
-    if (extension === ".mkv") {
-        return cb(null, true);
-    }
-
-    if (extension === ".mov") {
+    if (allowedExtensions.includes(extension)) {
         return cb(null, true);
     }
 
@@ -75,8 +63,9 @@ const fileFilter = function (req, file, cb) {
         "Only MP4, MKV, and MOV video files are allowed."
     ));
 };
+
 // ==========================================
-// MULTER CONFIGURATION
+// MULTER
 // ==========================================
 
 const upload = multer({
@@ -100,13 +89,13 @@ app.use(express.static(
 ));
 
 // ==========================================
-// UPLOAD API
+// UPLOAD + AI SUMMARY
 // ==========================================
 
 app.post(
-    "/upload",
+    "/summarize",
     upload.single("video"),
-    function (req, res) {
+    async function (req, res) {
 
         if (!req.file) {
 
@@ -120,20 +109,130 @@ app.post(
 
         }
 
-        console.log(
-            "Video saved:",
-            req.file.filename
-        );
+        const videoPath = req.file.path;
 
-        res.status(201).json({
+        console.log("Video saved:", req.file.filename);
 
-            success: true,
+        try {
 
-            message: "Video uploaded successfully!",
+            // ==================================
+            // SEND VIDEO TO PYTHON AI SERVER
+            // ==================================
 
-            filename: req.file.filename
+            const form = new FormData();
 
-        });
+            form.append(
+                "video",
+                fs.createReadStream(videoPath),
+                {
+                    filename: req.file.originalname,
+                    contentType: req.file.mimetype
+                }
+            );
+const language = req.body.language || "English";
+
+form.append("language", language);
+
+console.log("Selected summary language:", language);
+            console.log(
+                "Sending video to Python AI server..."
+            );
+
+            const response = await axios.post(
+                "http://127.0.0.1:5000/summarize",
+                form,
+                {
+                    headers: form.getHeaders(),
+
+                    maxContentLength:
+                        Infinity,
+
+                    maxBodyLength:
+                        Infinity,
+
+                    timeout: 0
+                }
+            );
+
+            console.log(
+                "AI summary received."
+            );
+
+            // ==================================
+            // RETURN SUMMARY TO BROWSER
+            // ==================================
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Video summarized successfully!",
+
+                summary:
+                    response.data.summary,
+
+                transcript:
+                    response.data.transcript
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "AI processing error:",
+                error.message
+            );
+
+            if (error.response) {
+
+                console.error(
+                    "Python server:",
+                    error.response.data
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        error.response.data.message ||
+                        "AI processing failed."
+
+                });
+
+            }
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Could not connect to Python AI server. Make sure app.py is running."
+
+            });
+
+        }
+
+        finally {
+
+            // ==================================
+            // DELETE TEMPORARY VIDEO
+            // ==================================
+
+            if (fs.existsSync(videoPath)) {
+
+                fs.unlinkSync(videoPath);
+
+                console.log(
+                    "Temporary video deleted."
+                );
+
+            }
+
+        }
 
     }
 );
@@ -144,7 +243,10 @@ app.post(
 
 app.use(function (err, req, res, next) {
 
-    console.error("Upload error:", err.message);
+    console.error(
+        "Upload error:",
+        err.message
+    );
 
     if (err instanceof multer.MulterError) {
 
@@ -163,12 +265,13 @@ app.use(function (err, req, res, next) {
 
     }
 
-    res.status(400).json({
+    return res.status(400).json({
 
         success: false,
 
         message:
-            err.message || "Upload failed."
+            err.message ||
+            "Upload failed."
 
     });
 
@@ -185,3 +288,7 @@ app.listen(PORT, function () {
     );
 
 });
+
+setInterval(() => {
+    console.log("Server process is still running...");
+}, 5000);

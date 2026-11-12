@@ -1,3 +1,7 @@
 node_modules/
 uploads/*
 .env
+venv/
+venv311/
+__pycache__/
+*.pyc
