@@ -5,3 +5,12 @@ venv/
 venv311/
 __pycache__/
 *.pyc
+
+*.zip
+.env
+venv/
+venv311/
+node_modules/
+uploads/
+__pycache__/
+*.pyc

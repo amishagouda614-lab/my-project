@@ -1,5 +1,4 @@
-
-import os
+﻿import os
 import subprocess
 import requests
 
@@ -28,7 +27,7 @@ OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 LANGUAGE_MAP = {
     "hi": "Hindi",
     "hindi": "Hindi",
-    "हिंदी": "Hindi",
+    "à¤¹à¤¿à¤‚à¤¦à¥€": "Hindi",
 
     "en": "English",
     "english": "English",
@@ -88,22 +87,112 @@ def get_selected_language():
 # LOAD WHISPER MODEL
 # ==========================================
 
-print("Loading Whisper model...")
+import threading
 
-whisper_model = WhisperModel(
-    WHISPER_MODEL,
-    device="cpu",
-    compute_type="int8"
-)
+whisper_model = None
+model_lock = threading.Lock()
 
-print("Whisper model loaded successfully.")
+def get_whisper_model():
+    global whisper_model
+
+    if whisper_model is None:
+        with model_lock:
+            if whisper_model is None:
+                print("Loading Whisper model...")
+
+                whisper_model = WhisperModel(
+                    WHISPER_MODEL,
+                    device="cpu",
+                    compute_type="int8"
+                )
+
+                print("Whisper model loaded successfully.")
+
+    return whisper_model
 
 
 # ==========================================
 # GENERATE LANGUAGE PROMPT
 # ==========================================
 
-def create_summary_prompt(transcript, language):
+
+
+def create_summary_prompt(transcript, target_language):
+    return f"""
+You are an expert video summarizer.
+
+Read the transcript below and create a clear, accurate,
+well-organized summary in {target_language}.
+
+Include:
+1. A suitable title.
+2. The main topic of the video.
+3. Important points and key information.
+4. Important events or steps in the correct order.
+5. A short conclusion.
+
+Use simple, easy-to-understand language.
+Do not invent information that is not in the transcript.
+
+TRANSCRIPT:
+{transcript}
+
+SUMMARY:
+"""
+def translate_transcript(transcript, target_language):
+
+    print("Translating into:", target_language)
+
+    chunks = [
+        transcript[i:i+2500]
+        for i in range(0, len(transcript), 2500)
+    ]
+
+    translated_parts = []
+
+    for chunk in chunks:
+
+        prompt = f"""
+Translate the following text into {target_language}.
+
+Rules:
+- Translate completely.
+- Do not summarize.
+- Do not skip sentences.
+- Use correct language script.
+- Return only translated text.
+
+Text:
+{chunk}
+"""
+
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.1,
+                    "num_ctx": 4096
+                }
+            },
+            timeout=600
+        )
+
+        response.raise_for_status()
+
+        translated = response.json().get(
+            "response", ""
+        ).strip()
+
+        if not translated:
+            raise Exception("Translation failed.")
+
+        translated_parts.append(translated)
+
+    return "\n".join(translated_parts)
+
 
     script_instruction = ""
 
@@ -291,11 +380,15 @@ def summarize():
 
         print("Transcribing audio with Whisper...")
 
-        segments, info = whisper_model.transcribe(
+        
+        model = get_whisper_model()
+
+        segments, info = model.transcribe(
             audio_path,
             beam_size=5,
             vad_filter=True
         )
+
 
         print("Detected audio language:", info.language)
 
@@ -329,12 +422,20 @@ def summarize():
             len(transcript_text)
         )
 
-        if not transcript_text.strip():
+        
+        # ==================================
+        # STEP 3: TRANSLATE TRANSCRIPT
+        # ==================================
 
-            return jsonify({
-                "success": False,
-                "message": "Could not detect speech in the video."
-            }), 400
+        print("Starting translation...")
+
+        translated_transcript = translate_transcript(
+            transcript_text,
+            language
+        )
+
+        print("Translation completed!")
+
 
         # ==================================
         # STEP 3: CREATE LANGUAGE PROMPT
@@ -343,9 +444,9 @@ def summarize():
         print("Creating summary prompt...")
 
         prompt = create_summary_prompt(
-            transcript_text,
-            language
-        )
+    translated_transcript,
+    language
+             )
 
         # ==================================
         # STEP 4: OLLAMA SUMMARY
@@ -407,18 +508,13 @@ def summarize():
         # ==================================
 
         return jsonify({
-
-            "success": True,
-
-            "message": "Video summarized successfully!",
-
-            "language": language,
-
-            "summary": summary,
-
-            "transcript": transcript_text
-
-        })
+    "success": True,
+    "message": "Video translated successfully!",
+    "language": language,
+    "transcript": transcript_text,
+    "translated_transcript": translated_transcript,
+    "summary": summary
+})
 
     # ======================================
     # ERROR HANDLING
@@ -500,3 +596,5 @@ if __name__ == "__main__":
         port=PORT,
         debug=False
     )
+
+

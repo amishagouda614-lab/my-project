@@ -179,42 +179,34 @@ console.log("Selected summary language:", language);
 
         }
 
-        catch (error) {
+        
+catch (error) {
 
-            console.error(
-                "AI processing error:",
-                error.message
-            );
+    console.error("AI processing error:", error);
 
-            if (error.response) {
+    if (error.response) {
 
-                console.error(
-                    "Python server:",
-                    error.response.data
-                );
+        console.error("Python response:", error.response.data);
 
-                return res.status(500).json({
+        return res.status(500).json({
+            success: false,
+            message: "Python AI error: " +
+                JSON.stringify(error.response.data)
+        });
 
-                    success: false,
+    }
 
-                    message:
-                        error.response.data.message ||
-                        "AI processing failed."
+    if (error.code) {
+        console.error("Connection error code:", error.code);
+    }
 
-                });
+    return res.status(500).json({
+        success: false,
+        message: "Python connection failed: " +
+            (error.code || error.message)
+    });
 
-            }
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Could not connect to Python AI server. Make sure app.py is running."
-
-            });
-
-        }
+}
 
         finally {
 

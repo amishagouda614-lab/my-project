@@ -330,6 +330,31 @@ function showSummary(summary) {
 
     summaryBox.appendChild(content);
 
+    // Download TXT Button
+    const txtButton = document.createElement("button");
+    txtButton.textContent = "📄 Download TXT";
+    txtButton.style.marginTop = "20px";
+    txtButton.style.marginRight = "10px";
+    txtButton.style.padding = "12px 18px";
+    txtButton.style.cursor = "pointer";
+
+    txtButton.onclick = function () {
+        const blob = new Blob([summary], {
+            type: "text/plain;charset=utf-8"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "video-summary.txt";
+        link.click();
+
+        URL.revokeObjectURL(url);
+    };
+
+    summaryBox.appendChild(txtButton);
+
 
     // Scroll to summary
     summaryBox.scrollIntoView({
